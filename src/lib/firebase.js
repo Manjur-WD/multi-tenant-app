@@ -24,11 +24,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
 
-export const auth = getAuth(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-export const recaptcha = (id = "recaptcha-container") =>
-    new RecaptchaVerifier(id, { size: "invisible" }, auth);
+const recaptcha = (containerId) =>
+  window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {});
 
-export const db = getFirestore(app);
+
+
+export { app, auth, db, recaptcha };
 
 

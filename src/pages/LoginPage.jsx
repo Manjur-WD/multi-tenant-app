@@ -17,7 +17,7 @@ export default function LoginPage() {
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-lg shadow p-5 border rounded-xl">
+          <div className="w-full max-w-md shadow p-5 border rounded-xl">
             <LoginForm />
           </div>
         </div>

@@ -15,17 +15,16 @@ const App = () => {
     <Suspense fallback={<Preloader />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-
-        {/* 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<DashBoard />} />
           <Route path="/product-list" element={<ProductList />} />
+          <Route path="/add-product" element={<AddProduct />} />
         </Route>
-        */}
 
-        <Route path="/" element={<DashBoard />} />
+
+        {/* <Route path="/" element={<DashBoard />} />
         <Route path="/add-product" element={<AddProduct />} />
-        <Route path="/product-list" element={<ProductList />} />
+        <Route path="/product-list" element={<ProductList />} /> */}
       </Routes>
     </Suspense>
   )

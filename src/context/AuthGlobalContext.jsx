@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../lib/firebase";
+import Preloader from "../components/Preloader";
 
 
 const AuthContext = createContext();
@@ -12,9 +13,8 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        console.log(currentUser);
-        
       if (currentUser) {
+        // console.log(currentUser);
         setUser(currentUser);
         setIsAuthenticated(true);
       } else {
@@ -27,10 +27,10 @@ const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Preloader />;
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

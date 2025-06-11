@@ -13,9 +13,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Analytics } from "../components/dashboard/Analytics"
-import { RecentData } from "../components/dashboard/RecentData"
-export default function DashBoard() {
+
+export default function AddProduct() {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -31,7 +30,7 @@ export default function DashBoard() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block text-xl">
                   <BreadcrumbLink href="#">
-                    Dashboard
+                    Add Product
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 {/* <BreadcrumbSeparator className="hidden md:block" /> */}
@@ -40,8 +39,7 @@ export default function DashBoard() {
           </div>
         </header>
         <section className="flex flex-1 flex-col gap-4 p-4 max-h-[90vh] overflow-auto">
-          <Analytics />
-          <RecentData />
+          product List
 
         </section>
       </SidebarInset>

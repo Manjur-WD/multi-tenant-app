@@ -1,20 +1,33 @@
-import React from 'react'
-import ProtectedRoute from './components/ProtectedRoute'
+import React, { Suspense, lazy } from 'react'
 import { Route, Routes } from 'react-router-dom'
-import SignIn from './pages/LoginPage'
-import DashBoard from './pages/DashBoard'
-import ProductList from './pages/Products/ProductList'
-import LoginPage from './pages/LoginPage'
+import ProtectedRoute from './components/ProtectedRoute'
+import Preloader from './components/Preloader'
+
+
+// Lazy load the Dashboard page only
+const DashBoard = lazy(() => import('./pages/DashBoard'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const ProductList = lazy(() => import('./pages/Products/ProductList'))
+const AddProduct = lazy(() => import('./pages/Products/AddProduct'))
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route element={<ProtectedRoute />}>
+    <Suspense fallback={<Preloader />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* 
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<DashBoard />} />
+          <Route path="/product-list" element={<ProductList />} />
+        </Route>
+        */}
+
         <Route path="/" element={<DashBoard />} />
+        <Route path="/add-product" element={<AddProduct />} />
         <Route path="/product-list" element={<ProductList />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   )
 }
 

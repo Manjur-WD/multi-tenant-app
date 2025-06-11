@@ -3,37 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React from "react";
-import { auth, recaptcha } from "@/lib/firebase";
-import { signInWithPhoneNumber } from "firebase/auth";
+import { Controller, useForm } from "react-hook-form";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css"
+
 
 export function LoginForm({ className, ...props }) {
-  const [phone, setPhone] = React.useState("");
-  const [step, setStep] = React.useState("phone"); // "phone" or "otp"
-  const [confirmationResult, setConfirmationResult] = React.useState(null);
 
-  // Handle reCAPTCHA + send OTP
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
 
-    if (!phone.match(/^\+91\d{10}$/)) {
-      alert("Please enter a valid Indian phone number starting with +91.");
-      return;
-    }
+  const { control, handleSubmit, formState: { errors } } = useForm();
 
-    try {
-      const appVerifier = recaptcha(); // invisible
-      const result = await signInWithPhoneNumber(auth, phone, appVerifier);
-      setConfirmationResult(result);
-      setStep("otp");
-    } catch (error) {
-      console.error("Failed to send OTP:", error);
-      alert(error.message);
-    }
-  };
+  const onSubmit = (data) => {
+    console.log(data);
+  }
 
   return (
     <form
-      onSubmit={handleSendOtp}
+      onSubmit={handleSubmit(onSubmit)}
       className={cn("flex flex-col gap-6 font-dmsans", className)}
       {...props}
     >
@@ -41,23 +27,38 @@ export function LoginForm({ className, ...props }) {
         <h1 className="text-2xl font-bold">Sign In to your account</h1>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-2">
         <div className="grid gap-3">
           <Label htmlFor="mobile">Mobile No</Label>
-          <Input
+          <Controller
+            name="phone_no"
+            control={control}
+            rules={{ required: "Valid Phone No is required !!" }}
+            render={({ field }) => (
+              <PhoneInput
+                country={'in'}
+                inputStyle={{width: "100%", border: "1px solid #b1aeae545", height: "50px", fontSize: "25px", fontFamily: "'DM Sans', sans-serif" , fontWeight: "500"}}
+                placeholder="e.g. +91XXXXXXXXXX"
+                {...field}
+                onChange={(phone) => field.onChange(phone)}
+              />
+            )}
+          />
+          {/* <Input
             id="mobile"
             type="tel"
             placeholder="e.g. +91XXXXXXXXXX"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-          />
+            
+          /> */}
+          {errors.phone_no && (
+            <p className="text-red-500 text-sm">{errors.phone_no.message}</p>
+          )}
         </div>
 
         <div id="recaptcha-container" />
 
         <Button type="submit" className="w-full uppercase">
-          Send OTP
+          Send OTP via SMS
         </Button>
       </div>
     </form>

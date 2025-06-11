@@ -11,4 +11,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    port: 3000, // Change to your preferred port
+    // Optional:
+    // host: true,  // Expose to network
+    // open: true   // Auto-open browser on start
+  },
 })

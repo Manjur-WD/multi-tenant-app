@@ -39,7 +39,7 @@ export default function DashBoard() {
             </Breadcrumb>
           </div>
         </header>
-        <section className="flex flex-1 flex-col gap-4 p-4 max-h-[90vh] overflow-auto">
+        <section className="flex flex-1 flex-col gap-4 p-4 max-h-[85vh] overflow-auto">
           <Analytics />
           <RecentData />
 

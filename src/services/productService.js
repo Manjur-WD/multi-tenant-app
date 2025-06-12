@@ -41,13 +41,13 @@ export const getAllProducts = async (tenantId) => {
     ...doc.data(),
   }));
 
-  console.log(products);
+  //   console.log(products);
   return products;
 };
 
 // get recent 5 products
 
-export const getRecentProducts = async (tenantId) => {
+export const getLastFiveProducts = async (tenantId) => {
   if (!tenantId) throw new Error("Tenant ID is required");
 
   const productsRef = collection(db, PRODUCTS_COLLECTION);
@@ -59,12 +59,11 @@ export const getRecentProducts = async (tenantId) => {
 
   const querySnapshot = await getDocs(q);
 
-  const products = querySnapshot.docs.map(doc => ({
+  const products = querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data()
+    ...doc.data(),
   }));
 
-  console.log("Recent 5 products:", products);
   return products;
 };
 
@@ -84,16 +83,48 @@ export const getProductById = async (id) => {
 };
 
 // Update a product by ID
+
 export const updateProduct = async (id, updatedData) => {
-  const docRef = doc(db, PRODUCTS_COLLECTION, id);
-  await updateDoc(docRef, {
-    ...updatedData,
-    updatedAt: serverTimestamp(),
-  });
+  try {
+    const docRef = doc(db, PRODUCTS_COLLECTION, id);
+    await updateDoc(docRef, {
+      ...updatedData,
+      updatedAt: serverTimestamp(),
+    });
+
+    return {
+      success: true,
+      message: `Product updated successfully.`,
+    };
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to update product.",
+    };
+  }
 };
 
 // Delete a product by ID
-export const deleteProduct = async (id) => {
-  const docRef = doc(db, PRODUCTS_COLLECTION, id);
-  await deleteDoc(docRef);
-};
+// export const deleteProduct = async (id) => {
+//   const docRef = doc(db, PRODUCTS_COLLECTION, id);
+//   await deleteDoc(docRef);
+// };
+
+export async function deleteProductById(productId) {
+  try {
+    const productRef = doc(db, "products", productId);
+    await deleteDoc(productRef);
+    return {
+      success: true,
+      message: `Product has been deleted.`,
+    };
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return {
+      success: false,
+      message: "Failed to delete product.",
+      error: error.message || error,
+    };
+  }
+}

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
@@ -24,36 +24,66 @@ import { AuthContext } from "@/context/AuthGlobalContext";
 
 import { SquarePen } from 'lucide-react';
 import { Trash2 } from 'lucide-react';
-import { deleteProduct } from "../../services/productService";
+import { deleteProductById } from "../../services/productService";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import EditProduct from "./EditProduct";
 
 export default function ProductList() {
+  const [refetch, setRefetch] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [singleProduct, setSingleProduct] = useState({});
   const { user } = useContext(AuthContext);
   const tenantId = user?.uid;
 
+  // Pagination & Search states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [search, setSearch] = useState("");
+
   const deleteMutation = useMutation({
-    mutationFn: async (id) => {
-      return await deleteProduct(id);
+    mutationFn: async (data) => {
+      return await deleteProductById(data.id);
+    },
+    onMutate: () => {
+      toast.loading("Deleting...");
     },
     onSuccess: (response) => {
-      console.log(response);
-
-    }
-  })
+      if (response.success) {
+        toast.success(response.message);
+      } else {
+        toast.error(response.message);
+      }
+      toast.dismiss();
+      setRefetch((prev) => !prev);
+    },
+  });
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products", tenantId],
+    queryKey: ["products", tenantId, refetch],
     queryFn: () => getAllProducts(tenantId),
     enabled: !!tenantId,
     refetchOnWindowFocus: false,
   });
 
-  // useEffect(() => {
-  //   if (tenantId && products?.length > 0) {
-  //     console.log("Products:", products);
-  //   }
-  //   console.log("Table Data:", table.getRowModel().rows);
-  // }, [tenantId, products]);
+  // Filter products by search term (name)
+  const filteredProducts = useMemo(() => {
+    if (!search) return products;
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [products, search]);
+
+  // Pagination slicing
+  const paginatedProducts = useMemo(() => {
+    const start = page * rowsPerPage;
+    return filteredProducts.slice(start, start + rowsPerPage);
+  }, [filteredProducts, page, rowsPerPage]);
+
+  // Reset page when filteredProducts or rowsPerPage change
+  useEffect(() => {
+    setPage(0);
+  }, [filteredProducts, rowsPerPage]);
 
   const columns = useMemo(
     () => [
@@ -83,45 +113,41 @@ export default function ProductList() {
           const product = row.original;
 
           const handleEdit = () => {
-            console.log("Edit clicked for:", product.id);
-            // Implement your edit logic here
+            setOpen(true);
+            setSingleProduct(product);
           };
 
           const handleDelete = () => {
-            deleteMutation.mutate(row.id);
-            // Implement your delete logic here
+            deleteMutation.mutate({ id: product.id });
           };
 
           return (
             <div className="flex gap-2">
               <button
                 onClick={handleEdit}
-                className="p-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-500"
+                className="p-1 cursor-pointer text-sm text-white rounded shadow"
               >
-                <SquarePen className="text-[5px]" />
+                <SquarePen className="w-4 text-blue-500" />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-1 text-sm text-white bg-red-600 rounded hover:bg-red-500"
+                className="p-1 cursor-pointer text-sm text-white rounded shadow"
               >
-                <Trash2 className="text-[5px]" />
+                <Trash2 className="w-4 text-red-500" />
               </button>
             </div>
           );
         },
-      }
+      },
     ],
-    []
+    [deleteMutation]
   );
 
   const table = useReactTable({
-    data: products,
+    data: paginatedProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-
-  // console.log("Table Instance:", table);
 
   const SkeletonRow = () => (
     <tr className="animate-pulse">
@@ -134,8 +160,15 @@ export default function ProductList() {
       <td className="px-4 py-2 border-b">
         <div className="h-4 bg-gray-300 rounded w-40" />
       </td>
+      <td className="px-4 py-2 border-b flex gap-2">
+        <div className="h-4 bg-gray-300 rounded w-5" />
+        <div className="h-4 bg-gray-300 rounded w-5" />
+      </td>
     </tr>
   );
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredProducts.length / rowsPerPage);
 
   return (
     <SidebarProvider>
@@ -160,6 +193,28 @@ export default function ProductList() {
         </header>
 
         <section className="flex flex-col gap-4 p-4 max-h-[90vh] overflow-auto font-dmsans">
+          <div className="flex justify-between items-center mb-2">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border rounded px-3 py-1 max-w-sm"
+            />
+
+            <select
+              className="border rounded px-3 py-1"
+              value={rowsPerPage}
+              onChange={(e) => setRowsPerPage(Number(e.target.value))}
+            >
+              {[5, 10, 25].map((num) => (
+                <option key={num} value={num}>
+                  {num} rows per page
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="overflow-auto border rounded-xl">
             <table className="min-w-full border-collapse">
               <thead className="bg-muted text-left">
@@ -181,25 +236,64 @@ export default function ProductList() {
               </thead>
               <tbody>
                 {isLoading
-                  ? [...Array(5)].map((_, idx) => <SkeletonRow key={idx} />)
-                  : table.getRowModel().rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50">
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-4 py-2 text-sm border-b"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                  ? [...Array(rowsPerPage)].map((_, idx) => (
+                      <SkeletonRow key={idx} />
+                    ))
+                  : table.getRowModel().rows.length > 0 ? (
+                      table.getRowModel().rows.map((row) => (
+                        <tr key={row.id} className="hover:bg-gray-50">
+                          {row.getVisibleCells().map((cell) => (
+                            <td
+                              key={cell.id}
+                              className="px-4 py-2 text-sm border-b"
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={columns.length} className="text-center py-4">
+                          No products found.
                         </td>
-                      ))}
-                    </tr>
-                  ))}
+                      </tr>
+                    )}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-3">
+            <button
+              className="btn btn-outline"
+              onClick={() => setPage((p) => Math.max(p - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </button>
+            <span>
+              Page {page + 1} of {totalPages}
+            </span>
+            <button
+              className="btn btn-outline"
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </button>
+          </div>
+
+          <EditProduct
+            open={open}
+            setOpen={setOpen}
+            refetch={refetch}
+            setRefetch={setRefetch}
+            singleProduct={singleProduct}
+          />
         </section>
       </SidebarInset>
     </SidebarProvider>

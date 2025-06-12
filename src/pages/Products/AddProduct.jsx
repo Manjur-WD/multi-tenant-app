@@ -75,10 +75,10 @@ export default function AddProduct() {
           <LogoutDrop />
         </header>
 
-        <section className="flex flex-1 flex-col justify-center items-center gap-4 p-4 max-h-[90vh] overflow-auto font-dmsans">
+        <section className="flex flex-1 flex-col justify-center gap-4 p-4 max-h-[90vh] overflow-auto font-dmsans">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="max-w-xl space-y-4 bg-white p-6 rounded-xl shadow-md"
+            className="md:w-[500px] space-y-4 bg-white p-6 rounded-xl shadow-md mx-auto w-full"
           >
             <div>
               <Label htmlFor="name" className="mb-2">Product Name</Label>

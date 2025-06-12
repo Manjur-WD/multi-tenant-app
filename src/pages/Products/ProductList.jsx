@@ -72,7 +72,7 @@ export default function ProductList() {
   });
 
   
-  log("Table Instance:", table);
+  console.log("Table Instance:", table);
 
   const SkeletonRow = () => (
     <tr className="animate-pulse">
